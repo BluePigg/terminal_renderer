@@ -16,10 +16,12 @@ void free_trender(T_Renderer *render);
 void hide_cursor();
 void clear_scr(T_Renderer *render, char chr);
 void del_scr();
+double rot_x(int *obj, double dx, double dy);
+double rot_y(int *obj, double dx, double dy);
 void draw_chr(T_Renderer *render, int x, int y, char chr);
 void update_buffer(T_Renderer *render);
 void render_buffer(T_Renderer *render);
 int draw_square(T_Renderer *render, int id, int x, int y, int z, int x_size,
-                int y_size, char chr);
+                int y_size, int rotation, char chr);
 
 #endif // T_RENDERER_H
