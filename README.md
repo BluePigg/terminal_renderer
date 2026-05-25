@@ -4,4 +4,4 @@ If you wanna see the sample and test it, run 'make' and ./2Dtest or just run 2Dt
 
 ## This project is not finished mabye
 ### Need to make:
-### - Rotation
+### - Various types (unlike square)
