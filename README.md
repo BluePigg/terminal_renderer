@@ -5,3 +5,5 @@ If you wanna see the sample and test it, run 'make' and ./2Dtest or just run 2Dt
 ## This project is not finished mabye
 ### Need to make:
 ### - Various types (unlike square)
+### - Get properties by id
+### - Fix rotation related error
