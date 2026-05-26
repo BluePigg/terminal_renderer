@@ -93,12 +93,12 @@ void update_buffer(T_Renderer *render) {
     }
     double cx = obj[0] + obj[3] / 2.0;
     double cy = obj[1] + obj[4] / 2.0;
-    for (double o_y = obj[1]; o_y < obj[1] + obj[4]; o_y += 0.5) {
-      for (double o_x = obj[0]; o_x < obj[0] + obj[3]; o_x += 0.5) {
-        double dx = o_x - cx;
-        double dy = o_y - cy;
-        int x = (int)(cx + rot_x(obj, dx, dy) + 0.5);
-        int y = (int)(cy + rot_y(obj, dx, dy) + 0.5);
+    for (int o_y = obj[1]; o_y < obj[1] + obj[4]; o_y++) {
+      for (int o_x = obj[0]; o_x < obj[0] + obj[3]; o_x++) {
+        double dx = (o_x+0.5) - cx;
+        double dy = (o_y+0.5) - cy;
+        int x = (int)(cx + rot_x(obj, dx, dy));
+        int y = (int)(cy + rot_y(obj, dx, dy));
         if (x < 0 || x >= render->width || y < 0 || y >= render->height)
           continue;
         int idx = x + y * render->width;
