@@ -1,8 +1,8 @@
-#include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #ifndef RAD_C
@@ -20,10 +20,60 @@ typedef struct T_Renderer {
   int height;
   char *buffer;
   int *zbuffer;
-  //{id번쨰 값: {x,y,z,x_size,y_size,rotation,chr},{ ... }}
+  //{id번쨰 값: {square (1) (type),x,y,z,x_size,y_size,rotation,chr},{ ... }}
   int **objects;
   int objects_size;
 } T_Renderer;
+
+struct termios orig_termios;
+
+void reset_terminal_mode() { tcsetattr(0, TCSANOW, &orig_termios); }
+
+void set_conio_terminal_mode() {
+  struct termios new_termios;
+
+  /* take two copies - one for now, one for later */
+  tcgetattr(0, &orig_termios);
+  memcpy(&new_termios, &orig_termios, sizeof(new_termios));
+
+  /* register cleanup handler, and set the new terminal mode */
+  atexit(reset_terminal_mode);
+  cfmakeraw(&new_termios);
+  new_termios.c_lflag |= ISIG;
+  tcsetattr(0, TCSANOW, &new_termios);
+}
+
+int kbhit() {
+  struct timeval tv = {0L, 0L};
+  fd_set fds;
+  FD_ZERO(&fds);
+  FD_SET(0, &fds);
+  return select(1, &fds, NULL, NULL, &tv) > 0;
+}
+
+int getch() {
+  int r;
+  unsigned char c;
+  if ((r = read(0, &c, sizeof(c))) < 0) {
+    return r;
+  } else {
+    return c;
+  }
+}
+
+void create_object_space(T_Renderer *render, int id, int size) {
+  while (id >= render->objects_size) {
+    int **temp =
+        realloc(render->objects, (render->objects_size + 1) * sizeof(int *));
+    if (temp == NULL) {
+      printf("Error because realloc failed.");
+    } else {
+      *(temp + render->objects_size) = (int *)malloc(size * sizeof(int));
+      render->objects = temp;
+      render->objects_size = render->objects_size + 1;
+    }
+  }
+}
 
 T_Renderer *init_trender(int width, int height) {
   T_Renderer *render = (T_Renderer *)malloc(sizeof(T_Renderer));
@@ -34,6 +84,7 @@ T_Renderer *init_trender(int width, int height) {
   render->objects = NULL;
   render->objects_size = 0;
 
+  set_conio_terminal_mode();
   signal(SIGINT, handle_sigint);
 
   return render;
@@ -75,12 +126,8 @@ void draw_chr(T_Renderer *render, int x, int y, char chr) {
   render->buffer[x + y * render->width] = chr;
 }
 
-double rot_x(int *obj, double dx, double dy) {
-  return dx * cos(obj[5] * RAD_C) + dy * sin(obj[5] * RAD_C);
-}
-
-double rot_y(int *obj, double dx, double dy) {
-  return -dx * sin(obj[5] * RAD_C) + dy * cos(obj[5] * RAD_C);
+int check_out_of_screen(T_Renderer *render, int x, int y) {
+  return x < 0 || x >= render->width || y < 0 || y >= render->height;
 }
 
 void update_buffer(T_Renderer *render) {
@@ -91,24 +138,84 @@ void update_buffer(T_Renderer *render) {
     if (obj == NULL) {
       continue;
     }
-    double cx = obj[0] + obj[3] / 2.0;
-    double cy = obj[1] + obj[4] / 2.0;
-    for (int o_y = obj[1]; o_y < obj[1] + obj[4]; o_y++) {
-      for (int o_x = obj[0]; o_x < obj[0] + obj[3]; o_x++) {
-        double dx = (o_x+0.5) - cx;
-        double dy = (o_y+0.5) - cy;
-        int x = (int)(cx + rot_x(obj, dx, dy));
-        int y = (int)(cy + rot_y(obj, dx, dy));
-        if (x < 0 || x >= render->width || y < 0 || y >= render->height)
-          continue;
-        int idx = x + y * render->width;
-        if (zbuffer[idx] <= obj[2]) {
-          zbuffer[idx] = obj[2];
-          draw_chr(render, x, y, obj[6]);
+    if (obj[0] == 0) {
+      if (check_out_of_screen(render, obj[1], obj[2]))
+        continue;
+      int idx = obj[1] + obj[2] * render->width;
+      if (zbuffer[idx] <= obj[3]) {
+        zbuffer[idx] = obj[3];
+        draw_chr(render, obj[1], obj[2], obj[4]);
+      }
+    } else if (obj[0] == 1) {
+      for (int y = obj[2]; y < obj[2] + obj[5]; y++) {
+        for (int x = obj[1]; x < obj[1] + obj[4]; x++) {
+          if (check_out_of_screen(render, x, y))
+            continue;
+          int idx = x + y * render->width;
+          if (zbuffer[idx] <= obj[3]) {
+            zbuffer[idx] = obj[3];
+            draw_chr(render, x, y, obj[6]);
+          }
         }
       }
     }
   }
+}
+
+int blk_to_blk(int *self, int *target) {
+  return self[1] == target[1] && self[2] == target[2];
+}
+
+int blk_to_sqr(int *blk, int *sqr) {
+  return sqr[1] <= blk[1] && blk[1] <= sqr[1] + sqr[4] - 1 &&
+         sqr[2] <= blk[2] && blk[2] <= sqr[2] + sqr[5] - 1;
+}
+
+int sqr_to_sqr(int *self, int *target) {
+  int smin_x = self[1];
+  int smin_y = self[2];
+  int smax_x = self[1] + self[4] - 1;
+  int smax_y = self[2] + self[5] - 1;
+
+  int tmin_x = target[1];
+  int tmin_y = target[2];
+  int tmax_x = target[1] + target[4] - 1;
+  int tmax_y = target[2] + target[5] - 1;
+
+  return smax_x >= tmin_x && smin_x <= tmax_x && smax_y >= tmin_y &&
+         smin_y <= tmax_y;
+}
+
+// return target id
+int check_collision(T_Renderer *render, int id) {
+  int *self = render->objects[id];
+
+  if (self == NULL)
+    return 0;
+
+  for (int i = 0; i < render->objects_size; i++) {
+    int *target = render->objects[i];
+    if (target == NULL || target == self)
+      continue;
+    if (self[0] == 0) {
+      if (target[0] == 0) {
+        if (blk_to_blk(self, target))
+          return i;
+      } else if (target[0] == 1) {
+        if (blk_to_sqr(self, target))
+          return i;
+      }
+    } else if (self[0] == 1) {
+      if (target[0] == 0) {
+        if (blk_to_sqr(target, self))
+          return i;
+      } else if (target[0] == 1) {
+        if (sqr_to_sqr(self, target))
+          return i;
+      }
+    }
+  }
+  return -1;
 }
 
 void render_buffer(T_Renderer *render) {
@@ -122,27 +229,29 @@ void render_buffer(T_Renderer *render) {
   fflush(stdout);
 }
 
-int draw_square(T_Renderer *render, int id, int x, int y, int z, int x_size,
-                int y_size, int rotation, char chr) {
-  while (id >= render->objects_size) {
-    int **temp =
-        realloc(render->objects, (render->objects_size + 1) * sizeof(int *));
-    if (temp == NULL) {
-      return id;
-    } else {
-      *(temp + render->objects_size) = (int *)calloc(7, sizeof(int));
-      render->objects = temp;
-      render->objects_size = render->objects_size + 1;
+int new_id(T_Renderer *render) {
+  for (int i = 0; i < render->objects_size; i++) {
+    if (render->objects[i] == NULL) {
+      return i;
     }
   }
-  int *obj = render->objects[id];
-  obj[0] = x;
-  obj[1] = y;
-  obj[2] = z;
-  obj[3] = x_size;
-  obj[4] = y_size;
-  obj[5] = rotation;
-  obj[6] = (int)chr;
+  return render->objects_size;
+}
 
-  return id;
+void message(T_Renderer *render, char *msg, size_t msg_length) {
+  int WIDTH = render->width;
+  int HEIGHT = render->height;
+
+  int x_center = WIDTH / 2 - (msg_length / 2);
+  int y_center = HEIGHT / 2;
+
+  for (int i = 0; i < msg_length + 2; i++) {
+    draw_chr(render, x_center + i - 1, y_center - 1, '-');
+    draw_chr(render, x_center + i - 1, y_center + 1, '-');
+  }
+  draw_chr(render, x_center - 1, y_center, '|');
+  draw_chr(render, x_center + msg_length, y_center, '|');
+  for (int i = 0; i < msg_length; i++) {
+    draw_chr(render, x_center + i, y_center, msg[i]);
+  }
 }
