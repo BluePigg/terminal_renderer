@@ -1,7 +1,8 @@
 CC = gcc
-TARGET = 2Dtest
-SRCS = 2Dtest.c 2Drender.c Square.c Block.c
-HEADERS = t_renderer.h
+TARGET = snake
+ISMODULE = 2Drender.c Square.c Block.c
+SRCS = snake.c $(addprefix modules/,$(ISMODULE))
+HEADERS = $(wildcard modules/*.h)
 
 $(TARGET): $(SRCS) $(HEADERS)
-	gcc -o $(TARGET) $(SRCS) -lm
+	$(CC) -o $(TARGET) $(SRCS) -lm

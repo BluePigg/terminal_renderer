@@ -1,6 +1,6 @@
-#include "block.h"
-#include "square.h"
-#include "t_renderer.h"
+#include "modules/block.h"
+#include "modules/square.h"
+#include "modules/t_renderer.h"
 #include <stdio.h>
 #include <unistd.h>
 
