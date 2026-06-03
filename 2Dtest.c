@@ -13,8 +13,8 @@ int main() {
   del_scr();
   hide_cursor();
   Square moving_square =
-      init_square(render, new_id(render), 10, 5, 0, 10, 10, '#');
-  Block blk1 = init_block(render, new_id(render), 10, 10, 1, '@');
+      init_square(render, new_id(render), 10, 5, 1, 10, 10, '#');
+  Block blk1 = init_block(render, new_id(render), 10, 10, 2, '@');
   Square static_square =
       init_square(render, new_id(render), 40, 5, 1, 5, 6, '%');
   Text txt = init_text(render, new_id(render), 10, 5, 1, 1, "Hello, World!",
@@ -50,6 +50,26 @@ int main() {
         mv_square(render, &moving_square, moving_square.x, moving_square.y - 1);
       } else if (key == 's') {
         mv_square(render, &moving_square, moving_square.x, moving_square.y + 1);
+      } else if (key == 'g') {
+        switch_outline(render, &txt);
+      } else if (key == 'h') {
+        txt.z = txt.z != -1 ? -1 : 1;
+        if (render->objects[txt.id] != NULL) {
+          free(render->objects[txt.id]);
+        }
+        render->objects[txt.id] = parse_txt_iptr(txt);
+      } else if (key == 'j') {
+        txt.z = txt.z != -2 ? -2 : 1;
+        if (render->objects[txt.id] != NULL) {
+          free(render->objects[txt.id]);
+        }
+        render->objects[txt.id] = parse_txt_iptr(txt);
+      } else if (key == 'k') {
+        txt.z = txt.z != 0 ? 0 : 1;
+        if (render->objects[txt.id] != NULL) {
+          free(render->objects[txt.id]);
+        }
+        render->objects[txt.id] = parse_txt_iptr(txt);
       }
     }
     mv_block(render, &blk1, moving_square.x, moving_square.y - 3);

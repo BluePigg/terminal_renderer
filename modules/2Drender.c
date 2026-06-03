@@ -125,20 +125,21 @@ int check_out_of_screen(T_Renderer *render, int x, int y) {
   return x < 0 || x >= render->width || y < 0 || y >= render->height;
 }
 
+// z 0 = visible but cannot collide
+// z -1 = invisible but can collide
+// z -2 = invisible and cannot collide
 void update_buffer(T_Renderer *render) {
   memset(render->zbuffer, 0, render->width * render->height * sizeof(int));
   int *zbuffer = render->zbuffer;
   for (int i = 0; i < render->objects_size; i++) {
     int *obj = render->objects[i];
-    if (obj == NULL) {
+    if (obj == NULL || obj[3] < 0) {
       continue;
     }
     if (obj[0] == 0) {
       if (check_out_of_screen(render, obj[1], obj[2]))
         continue;
       int idx = obj[1] + obj[2] * render->width;
-      if (obj[3] < 0)
-        continue;
       if (zbuffer[idx] <= obj[3]) {
         zbuffer[idx] = obj[3];
         draw_chr(render, obj[1], obj[2], obj[4]);
@@ -146,7 +147,7 @@ void update_buffer(T_Renderer *render) {
     } else if (obj[0] == 1) {
       for (int y = obj[2]; y < obj[2] + obj[5]; y++) {
         for (int x = obj[1]; x < obj[1] + obj[4]; x++) {
-          if (check_out_of_screen(render, x, y) || obj[3] < 0)
+          if (check_out_of_screen(render, x, y))
             continue;
           int idx = x + y * render->width;
           if (zbuffer[idx] <= obj[3]) {
@@ -266,7 +267,8 @@ int check_collision(T_Renderer *render, int id) {
   int res = -1;
   for (int i = 0; i < render->objects_size; i++) {
     int *target = objs_copy[i];
-    if (target == NULL || i == id)
+    if (target == NULL || i == id || target[3] == -2 || self[3] == -2 ||
+        target[3] == 0 || self[3] == 0)
       continue;
     if (self[0] == 0) {
       if (target[0] == 0) {

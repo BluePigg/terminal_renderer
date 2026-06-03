@@ -68,6 +68,14 @@ void rewrite_txt(T_Renderer *render, Text *txt, char *txt_ptr, int txt_length) {
   render->objects[txt->id] = parse_txt_iptr(*txt);
 }
 
+void switch_outline(T_Renderer *render, Text *txt) {
+  txt->outline = txt->outline == 0 ? 1 : 0;
+  if (render->objects[txt->id] != NULL) {
+    free(render->objects[txt->id]);
+  }
+  render->objects[txt->id] = parse_txt_iptr(*txt);
+}
+
 Text init_text(T_Renderer *render, int id, int x, int y, int z, int outline,
                char *txt_ptr, int txt_length) {
   Text txt;
