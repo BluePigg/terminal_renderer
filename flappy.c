@@ -1,6 +1,7 @@
 #include "modules/block.h"
 #include "modules/square.h"
 #include "modules/t_renderer.h"
+#include "modules/text.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -106,15 +107,8 @@ int main() {
     update_buffer(render);
 
     if (!alive) {
-      int score_len = 1;
-      int score_copy = score;
-      while (score_copy > 10) {
-        score_copy /= 10;
-        score_len++;
-      }
-      char *msg = (char *)calloc(7 + score_len, sizeof(char));
-      snprintf(msg, sizeof(char) * (7 + score_len), "SCORE:%d", score);
-      message(render, msg, sizeof(char) * (7 + score_len));
+      char *msg = cat_ch_to_int("SCORE: ", score);
+      message(render, msg, get_txt_length(msg));
     }
 
     render_buffer(render);

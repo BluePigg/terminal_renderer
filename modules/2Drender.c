@@ -185,21 +185,25 @@ void update_buffer(T_Renderer *render) {
         for (int i = 0; i < obj[9] + 2; i++) {
           if (!check_out_of_screen(render, x_center + i - 1, y_center - 1) &&
               zbuffer[x_center + i - 1 + (y_center - 1) * WIDTH] <= obj[3]) {
+            zbuffer[x_center + i - 2 + (y_center - 1) * WIDTH] = obj[3];
             draw_chr(render, x_center + i - 1, y_center - 1,
                      obj[6] == 1 ? '-' : '#');
           }
           if (!check_out_of_screen(render, x_center + i - 1, y_center + 1) &&
               zbuffer[x_center + i - 1 + (y_center + 1) * WIDTH] <= obj[3]) {
+            zbuffer[x_center + i - 1 + (y_center + 1) * WIDTH] = obj[3];
             draw_chr(render, x_center + i - 1, y_center + 1,
                      obj[6] == 1 ? '-' : '#');
           }
         }
         if (!check_out_of_screen(render, x_center - 1, y_center) &&
             zbuffer[x_center - 1 + y_center * WIDTH] <= obj[3]) {
+          zbuffer[x_center - 1 + y_center * WIDTH] = obj[3];
           draw_chr(render, x_center - 1, y_center, obj[6] == 1 ? '|' : '#');
         }
         if (!check_out_of_screen(render, x_center + obj[9], y_center) &&
             zbuffer[x_center + obj[9] + y_center * WIDTH] <= obj[3]) {
+          zbuffer[x_center + obj[9] + y_center * WIDTH] = obj[3];
           draw_chr(render, x_center + obj[9], y_center,
                    obj[6] == 1 ? '|' : '#');
         }
@@ -207,6 +211,7 @@ void update_buffer(T_Renderer *render) {
       for (int i = 0; i < obj[9]; i++) {
         if (!check_out_of_screen(render, x_center + i, y_center) &&
             zbuffer[x_center + i + y_center * WIDTH] <= obj[3]) {
+          zbuffer[x_center + i + y_center * WIDTH] = obj[3];
           draw_chr(render, x_center + i, y_center, msg[i]);
         }
       }
