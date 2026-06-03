@@ -17,8 +17,7 @@ int main() {
   Block blk1 = init_block(render, new_id(render), 10, 10, 2, '@');
   Square static_square =
       init_square(render, new_id(render), 40, 5, 1, 5, 6, '%');
-  Text txt = init_text(render, new_id(render), 10, 5, 1, 1, "Hello, World!",
-                       get_txt_length("Hello, World!"));
+  Text txt = init_text(render, new_id(render), 10, 5, 1, 1, "Hello, World!");
 
   int a = 0;
   while (1) {
@@ -45,13 +44,13 @@ int main() {
         snprintf(msg,
                  (ran_length + get_txt_length("Hello, World!")) * sizeof(char),
                  "Hello, World!%d", ran);
-        rewrite_txt(render, &txt, msg, get_txt_length(msg));
+        rewrite_txt(render, &txt, msg);
       } else if (key == 'w') {
         mv_square(render, &moving_square, moving_square.x, moving_square.y - 1);
       } else if (key == 's') {
         mv_square(render, &moving_square, moving_square.x, moving_square.y + 1);
       } else if (key == 'g') {
-        switch_outline(render, &txt);
+        switch_outline(render, &txt, txt.outline == 1 ? 0 : 1);
       } else if (key == 'h') {
         txt.z = txt.z != -1 ? -1 : 1;
         if (render->objects[txt.id] != NULL) {

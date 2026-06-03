@@ -1,7 +1,7 @@
 #include "modules/block.h"
 #include "modules/square.h"
 #include "modules/t_renderer.h"
-#include <stdio.h>
+#include "modules/text.h"
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
@@ -23,18 +23,18 @@ int main() {
   del_scr();
   hide_cursor();
 
-  Square topwall = init_square(render, 0, 0, 0, 2, render->width, 1, '#');
-  Square leftwall = init_square(render, 1, 0, 0, 2, 1, render->height, '#');
+  Square topwall = init_square(render, 0, 0, 0, 3, render->width, 1, '#');
+  Square leftwall = init_square(render, 1, 0, 0, 3, 1, render->height, '#');
   Square rightwall =
-      init_square(render, 2, render->width - 1, 0, 2, 1, render->height, '#');
+      init_square(render, 2, render->width - 1, 0, 3, 1, render->height, '#');
   Square bottomwall =
-      init_square(render, 3, 0, render->height - 1, 2, render->width, 1, '#');
+      init_square(render, 3, 0, render->height - 1, 3, render->width, 1, '#');
 
   Block snake =
-      init_block(render, 4, render->width / 4, render->height / 2, 1, 'S');
+      init_block(render, 4, render->width / 4, render->height / 2, 2, 'S');
 
   Block apple = init_block(render, 5, render->width / 2 + render->width / 4,
-                           render->height / 2, 0, '@');
+                           render->height / 2, 1, '@');
 
   while (1) {
     int key = -1;
@@ -74,16 +74,8 @@ int main() {
     update_buffer(render);
 
     if (collide != -1 && collide != 5) {
-      int score_char_length = 1;
-      int temp_score = body_length;
-      while (temp_score > 10) {
-        temp_score /= 10;
-        score_char_length++;
-      }
-      char *msg = (char *)calloc(18 + score_char_length, sizeof(char));
-      snprintf(msg, sizeof(char) * (18 + score_char_length),
-               "GAME OVER, SCORE:%d", body_length);
-      message(render, msg, sizeof(char) * (18 + score_char_length));
+      char *msg = cat_ch_to_int("GAME OVER, SCORE: ", body_length);
+      message(render, msg, get_txt_length(msg));
       game_over = 1;
     } else if (collide == 5) {
       body_length++;

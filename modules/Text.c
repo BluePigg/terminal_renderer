@@ -57,10 +57,10 @@ void mv_txt(T_Renderer *render, Text *txt, int nx, int ny) {
   render->objects[txt->id] = parse_txt_iptr(*txt);
 }
 
-void rewrite_txt(T_Renderer *render, Text *txt, char *txt_ptr, int txt_length) {
+void rewrite_txt(T_Renderer *render, Text *txt, char *txt_ptr) {
   txt->txt_ptr = (long)txt_ptr;
-  txt->txt_length = txt_length;
-  txt->x_size = txt_length + 2;
+  txt->txt_length = get_txt_length(txt_ptr);
+  txt->x_size = get_txt_length(txt_ptr) + 2;
   txt->y_size = 3;
   if (render->objects[txt->id] != NULL) {
     free(render->objects[txt->id]);
@@ -68,8 +68,8 @@ void rewrite_txt(T_Renderer *render, Text *txt, char *txt_ptr, int txt_length) {
   render->objects[txt->id] = parse_txt_iptr(*txt);
 }
 
-void switch_outline(T_Renderer *render, Text *txt) {
-  txt->outline = txt->outline == 0 ? 1 : 0;
+void switch_outline(T_Renderer *render, Text *txt, int type) {
+  txt->outline = type;
   if (render->objects[txt->id] != NULL) {
     free(render->objects[txt->id]);
   }
@@ -77,7 +77,7 @@ void switch_outline(T_Renderer *render, Text *txt) {
 }
 
 Text init_text(T_Renderer *render, int id, int x, int y, int z, int outline,
-               char *txt_ptr, int txt_length) {
+               char *txt_ptr) {
   Text txt;
   create_object_space(render, id, 10);
 
@@ -85,11 +85,11 @@ Text init_text(T_Renderer *render, int id, int x, int y, int z, int outline,
   txt.x = x;
   txt.y = y;
   txt.z = z;
-  txt.x_size = txt_length + 2;
+  txt.x_size = get_txt_length(txt_ptr) + 2;
   txt.y_size = 3;
   txt.outline = outline;
   txt.txt_ptr = (long)txt_ptr;
-  txt.txt_length = txt_length;
+  txt.txt_length = get_txt_length(txt_ptr);
 
   render->objects[id] = parse_txt_iptr(txt);
 

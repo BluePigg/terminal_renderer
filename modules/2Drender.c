@@ -18,6 +18,20 @@ void show_cursor();
 void hide_cursor();
 void handle_sigint(int sig);
 
+char *cat_ch_to_int(char *msg, int target_int) {
+  int msg_length = get_txt_length(msg);
+  int tint_length = 1;
+  int tint_cp = target_int;
+  while (tint_cp >= 10) {
+    tint_cp /= 10;
+    tint_length++;
+  }
+  int nsize = msg_length + tint_length + 1;
+  char *nmsg = (char *)calloc(nsize, sizeof(char));
+  snprintf(nmsg, nsize * sizeof(char), "%s%d", msg, target_int);
+  return nmsg;
+}
+
 // Terminal Renderer
 
 struct termios orig_termios;
@@ -166,25 +180,28 @@ void update_buffer(T_Renderer *render) {
 
       char *msg = cvt_obj_to_txt(obj);
 
-      if (obj[6] == 1) {
+      if (obj[6] != 0) {
         x_center = obj[1];
         for (int i = 0; i < obj[9] + 2; i++) {
           if (!check_out_of_screen(render, x_center + i - 1, y_center - 1) &&
               zbuffer[x_center + i - 1 + (y_center - 1) * WIDTH] <= obj[3]) {
-            draw_chr(render, x_center + i - 1, y_center - 1, '-');
+            draw_chr(render, x_center + i - 1, y_center - 1,
+                     obj[6] == 1 ? '-' : '#');
           }
           if (!check_out_of_screen(render, x_center + i - 1, y_center + 1) &&
               zbuffer[x_center + i - 1 + (y_center + 1) * WIDTH] <= obj[3]) {
-            draw_chr(render, x_center + i - 1, y_center + 1, '-');
+            draw_chr(render, x_center + i - 1, y_center + 1,
+                     obj[6] == 1 ? '-' : '#');
           }
         }
         if (!check_out_of_screen(render, x_center - 1, y_center) &&
             zbuffer[x_center - 1 + y_center * WIDTH] <= obj[3]) {
-          draw_chr(render, x_center - 1, y_center, '|');
+          draw_chr(render, x_center - 1, y_center, obj[6] == 1 ? '|' : '#');
         }
         if (!check_out_of_screen(render, x_center + obj[9], y_center) &&
             zbuffer[x_center + obj[9] + y_center * WIDTH] <= obj[3]) {
-          draw_chr(render, x_center + obj[9], y_center, '|');
+          draw_chr(render, x_center + obj[9], y_center,
+                   obj[6] == 1 ? '|' : '#');
         }
       }
       for (int i = 0; i < obj[9]; i++) {

@@ -15,6 +15,7 @@ typedef struct T_Renderer {
 } T_Renderer;
 
 // Function Prototypes
+char *cat_ch_to_int(char *msg, int target_int);
 T_Renderer *init_trender(int width, int height);
 void free_trender(T_Renderer *render);
 void hide_cursor();

@@ -18,9 +18,9 @@ int *parse_txt_iptr(Text txt);
 void mv_txt(T_Renderer *render, Text *txt, int nx, int ny);
 void resize_txt(T_Renderer *render, Text *txt, int nx, int ny);
 Text init_text(T_Renderer *render, int id, int x, int y, int z, int outline,
-               char *txt_ptr, int txt_length);
+               char *txt_ptr);
 int get_txt_length(char *txt);
-void rewrite_txt(T_Renderer *render, Text *txt, char *txt_ptr, int txt_length);
-void switch_outline(T_Renderer *render, Text *txt);
+void rewrite_txt(T_Renderer *render, Text *txt, char *txt_ptr);
+void switch_outline(T_Renderer *render, Text *txt, int type);
 
 #endif
